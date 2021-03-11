@@ -3,26 +3,26 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 /**
- * Kommandoschnittstelle zur Benutzung der Klasse Trie.
+ * Command line application to handle basic operations of a trie, i.e. creation, insertion,
+ * deletion, etc.
  */
 public class Shell {
 
-  // kleinstmoeglicher Punktwert fuer Eintraege im Trie
+  // smallest possible value for entries
   private static final int MIN_POINTS_VALUE = 0;
 
-  // haeufigste Fehlermeldungen
+  // most common error messages
   private static final String WRONG_POINTS_VALUE_MESSAGE =
-      "Error! Es sind nur ganze Zahlen groesser gleich " + MIN_POINTS_VALUE
-      + " als Eingabe fuer Punkte erlaubt.";
+      "Error! Only numbers greater than " + MIN_POINTS_VALUE + " are allowed.";
   private static final String WRONG_INPUT_PARAMETERS_MESSAGE =
-      "Error! Dieser Befehl erwartet andere Parameter. Benutzen Sie help fuer mehr Informationen.";
-  private static final String ENTRY_DOESNT_EXIST_MESSAGE =
-      "Error! Dieser Eintrag existiert nicht.";
+      "Error! Wrong input parameters. Use <help> for further instructions";
+  private static final String ENTRY_DOESNT_EXIST_MESSAGE = "Error! This entry does not exist.";
   private static final String ONLY_LOWER_CASE_ALLOWED_MESSAGE =
-      "Error! Es sind nur Kleinbuchstaben im Bereich [a-z] als Eingabe fuer Namen erlaubt.";
+      "Error! Only lower case letters [a-z] are allowed.";
 
   private Shell() {
-    // Utility-Klasse, das Erstellen von Objekten ist nicht vorgesehen
+    // prohibit instantiation
+    throw new AssertionError();
   }
 
   public static void main(String[] args) throws IOException {
@@ -44,7 +44,7 @@ public class Shell {
       final String[] tokens = input.trim().split("\\s+");
       final String firstInput = tokens[0];
       final ShellCommand command = identifyCommand(firstInput, tokens);
-      
+
       switch (command) {
         case NEW:
           passedData = new Trie();
@@ -74,26 +74,22 @@ public class Shell {
           System.out.println(WRONG_INPUT_PARAMETERS_MESSAGE);
           break;
         default:
-          System.out.println("Error! Dieser Befehl existiert nicht. "
-              + "Benutzen Sie help fuer eine Liste aller moeglichen Befehle.");
+          System.out.println(
+              "Error! This command does not exist. " + "Use help for further instructions.");
           break;
       }
     }
   }
-  
+
   /**
-   * Prueft, ob ein String ein Praefix eines moeglichen Befehls ist. Ist dies der
-   * Fall wird zusaetzlich geprueft, ob der Benutzer die korrekte Anzahl an Parametern
-   * uebergeben hat. Bei Uebereinstimmung wird der passende Befehl zurueckgegeben.
-   * Existiert der Befehl nicht oder wurden zu wenig/viele Parameter uebergeben wird
-   * ein "Fehler"-Befehl zurueckgegeben.
+   * Checks if a given command is valid, i.e. it exists and has the associated number of parameters.
    */
   private static ShellCommand identifyCommand(String possibleCommand, String[] parameters) {
     possibleCommand = possibleCommand.toLowerCase();
     ShellCommand identifiedCommand = ShellCommand.UNKNOWN;
-    
+
     if (possibleCommand.trim().isEmpty()) {
-      // leere Eingabe abfangen
+      // check if the command is an emptry string
       return ShellCommand.UNKNOWN;
     }
     for (ShellCommand cmd : ShellCommand.values()) {
@@ -102,39 +98,34 @@ public class Shell {
       }
     }
     if (identifiedCommand == ShellCommand.UNKNOWN) {
-      // Befehl existiert nicht
+      // command does not exist
       return ShellCommand.UNKNOWN;
     }
     if (identifiedCommand.getParameterNumber() == parameters.length) {
       return identifiedCommand;
     } else {
-      // Befehl hat falsche Parameteranzahl uebergeben bekommen
+      // command exists but has the wrong number of parameters
       return ShellCommand.WRONG_PARAMETER;
     }
   }
 
   /**
-   * Gibt true zurueck, wenn ein String ausschliesslich aus chars im Bereich [a-z]
-   * besteht, d.h. die ASCII-Werte liegen zwischen 97 und 122.
+   * Returns true if the string consists only of characters [a-z], i.e., ASCII-values are between 97
+   * and 122.
    */
   private static boolean isOnlyLowerCase(String str) {
     for (int i = 0; i < str.length(); i++) {
       if (str.charAt(i) < 97 || str.charAt(i) > 122) {
-        // ASCII-Wert fuer den kleinsten Wert: 'a' = 97
-        // ASCII-Wert fuer den groessten Wert: 'z' = 122
-        // Ist ein Wert ausserhalb dieses Intervalls stellt dies keine korrekte Eingabe dar
+        // smallest ASCII-value: 'a' = 97
+        // biggest ASCII-value: 'z' = 122
         return false;
       }
     }
     return true;
   }
-  
+
   /**
-   * Hilfsmethode fuer den Befehl "add". Fuegt in den uebergebenen Trie einen
-   * neuen Eintrag ein. Prueft ausserdem, ob alle Eingaben korrekt sind und gibt
-   * bei falschen Eingaben Fehlermeldungen aus. Hat der Benutzer fuer den zweiten
-   * Parameter keine ganze Zahl eingegeben wird die dadurch auftretende NumberFormatException
-   * gefangen und ein Hinweis ausgegeben.
+   * Helper method for the add command.
    */
   private static void addEntry(Trie trie, String[] tokens) {
     final String name = tokens[1];
@@ -148,7 +139,7 @@ public class Shell {
     try {
       points = Integer.parseInt(possiblePointsValue);
     } catch (NumberFormatException e) {
-      // Eingabe war kein Integer
+      // input was not a number
       System.out.println(WRONG_POINTS_VALUE_MESSAGE);
       return;
     }
@@ -160,16 +151,12 @@ public class Shell {
     if (trie.add(name, points)) {
       trie.add(name, points);
     } else {
-      System.out.println("Error! Dieser Eintrag existiert schon.");
+      System.out.println("Error! This entry already exists.");
     }
   }
 
   /**
-   * Hilfsmethode fuer den Befehl "change". Aendert im uebergebenen Trie den Punktwert
-   * eines bestehenden Eintrags. Es werden alle Eingaben auf Korrektheit geprueft und
-   * bei falschen Eingaben Fehlermeldungen ausgegeben. Wird als zweiter Parameter keine
-   * Zahl eingegeben tritt eine NumberFormatException auf, die gefangen wird und ein
-   * Hinweis an den Benutzer wird ausgegeben.
+   * Helper method for the change command.
    */
   private static void changeEntry(Trie trie, String[] tokens) {
     final String name = tokens[1];
@@ -183,7 +170,7 @@ public class Shell {
     try {
       points = Integer.parseInt(possiblePointsValue);
     } catch (NumberFormatException e) {
-      // Eingabe war kein Integer
+      // input was not a number
       System.out.println(WRONG_POINTS_VALUE_MESSAGE);
       return;
     }
@@ -191,7 +178,7 @@ public class Shell {
       System.out.println(WRONG_POINTS_VALUE_MESSAGE);
       return;
     }
-    // Pruefe, ob der eingegebene Name existiert
+    // check if the name exists
     if (trie.change(name, points)) {
       trie.change(name, points);
     } else {
@@ -200,9 +187,7 @@ public class Shell {
   }
 
   /**
-   * Hilfsmethode fuer den Befehl "delete". Loescht im uebergebenen Trie einen bestehenden
-   * Eintrag. Es werden alle Eingaben geprueft und bei falschen Eingaben Fehlermeldungen
-   * ausgegeben.
+   * Helper method for the delete command.
    */
   private static void deleteEntry(Trie trie, String[] tokens) {
     final String name = tokens[1];
@@ -218,8 +203,7 @@ public class Shell {
   }
 
   /**
-   * Hilfsmethode fuer den Befehl "points". Gibt den Punktwert eines Eintrags aus.
-   * Es werden alle Eingaben geprueft und bei falschen Eingaben Fehlermeldungen ausgegeben.
+   * Helper method for the points command.
    */
   private static void points(Trie trie, String[] tokens) {
     final String name = tokens[1];
@@ -231,41 +215,34 @@ public class Shell {
     } else {
       System.out.println(ENTRY_DOESNT_EXIST_MESSAGE);
     }
-    
+
   }
-  
+
   /**
-   * Hilfsmethode fuer den Befehl "help". Gibt alle moeglichen Befehle sowie deren
-   * Funktion auf der Konsole aus, sofern die Eingabeparameter korrekt sind.
+   * Helper method for the help command.
    */
   private static void help() {
-    System.out.println("Folgende Eingaben sind moeglich: \n");
+    System.out.println("The following commands are possible: \n");
 
-    System.out.println("new: \n"
-        + "\t Legt einen neuen Trie an und verwirft die alte Datenstruktur.");
+    System.out.println("new: \n" + "\t Creates a new trie.");
 
-    System.out.println("add <name> <punkte>: \n"
-        + "\t Fuegt einen neuen Eintrag <name> mit Punktwert <punkte> hinzu.");
+    System.out.println(
+        "add <name> <points>: \n" + "\t Creates a new entry with <name> and <points>.");
 
-    System.out.println("change <name> <punkte>: \n"
-        + "\t Aendert den Punktwert <punkte> des Eintrags <name>.");
+    System.out.println(
+        "change <name> <points>: \n" + "\t Changes the points of the entry <name> to <points>.");
 
-    System.out.println("delete <name>: \n"
-        + "\t Loescht den Eintrag an der Stelle <name>");
+    System.out.println("delete <name>: \n" + "\t Deletes the entry <name>.");
 
-    System.out.println("points <name>: \n"
-        + "\t Gibt den Punktwert des Eintrags <name> aus.");
+    System.out.println("points <name>: \n" + "\t Returns the point value of the entry <name>.");
 
-    System.out.println("trie: \n"
-        + "\t Gibt den Inhalt des Tries aus.");
+    System.out.println("trie: \n" + "\t Returns the trie.");
 
-    System.out.println("quit: \n"
-        + "\t Beendet das Programm.");
+    System.out.println("quit: \n" + "\t Terminates the application.");
 
-    System.out.println("\nBitte beachten Sie folgende Formalitaeten: \n"
-        + "<name> akzeptiert nur kleingeschriebene Namen ohne Umlaute. \n"
-        + "<punkte> akzeptiert nur positive ganze Zahlen."
-        + "Bereits bestehende Eintraege koennen nicht mit neuen ueberschrieben werden.\n\n");
+    System.out.println("\nAlso consider: \n" + "<name> should be lowercase. \n"
+        + "<points> should be greater than zero."
+        + "It is not possible to override existing entries.\n\n");
   }
 
 }
